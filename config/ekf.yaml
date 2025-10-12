@@ -1,0 +1,44 @@
+ekf_filter_node:
+  ros__parameters:
+
+    frequency: 30.0               # EKF update rate (Hz)
+    sensor_timeout: 0.1           # Max time delay before data is ignored
+    two_d_mode: true              # We only estimate planar motion (x, y, yaw)
+    print_diagnostics: true
+    publish_acceleration: true
+    publish_tf: true
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom             # world_frame = odom for odom-based localization
+
+    odom0: /odom
+    odom0_config: [true,  true,  true,   # x, y, z
+                   false, false, false,    # roll, pitch, yaw
+                   true,  true,  true,   # vx, vy, vz
+                   false, false, true,    # vroll, vpitch, vyaw
+                   false, false, false]   # ax, ay, az
+    odom0_differential: false
+    odom0_relative: false
+    #odom0_queue_size: 2
+
+    imu0: /imu
+    imu0_config: [false, false, false,    # x, y, z
+                  true,  true,  true,     # roll, pitch, yaw
+                  false, false, false,    # vx, vy, vz
+                  true, true, true,     # vroll, vpitch, vyaw
+                  true,  true,  true]     # ax, ay, az
+    imu0_differential: false
+    imu0_relative: true
+    imu0_remove_gravitational_acceleration: true
+
+    # ----- Process Noise -----
+    process_noise_covariance: [0.05, 0, 0, 0, 0, 0,
+                               0, 0.05, 0, 0, 0, 0,
+                               0, 0, 0.0, 0, 0, 0,
+                               0, 0, 0, 0.03, 0, 0,
+                               0, 0, 0, 0, 0.03, 0,
+                               0, 0, 0, 0, 0, 0.05]
+
+
+    
