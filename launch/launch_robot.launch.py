@@ -42,8 +42,20 @@ def generate_launch_description():
     #         parameters=[twist_mux_params],
     #         remappings=[('/cmd_vel_out','/diff_cont/cmd_vel_unstamped')]
     #     )
-
     
+    ekf_config = os.path.join(
+        get_package_share_directory(package_name),
+        'config',
+        'ekf.yaml'
+    )
+    
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_node',
+        output='screen',
+        parameters=[ekf_config, {'use_sim_time': False}]
+    )
 
 
     robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
@@ -107,6 +119,7 @@ def generate_launch_description():
     # Launch them all!
     return LaunchDescription([
         rsp,
+        robot_localization_node
         # joystick,
         # twist_mux,
         # delayed_controller_manager,
