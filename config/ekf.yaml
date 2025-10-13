@@ -1,4 +1,4 @@
-ekf_filter_node:
+ekf_node:
   ros__parameters:
 
     frequency: 30.0               # EKF update rate (Hz)
@@ -12,7 +12,7 @@ ekf_filter_node:
     base_link_frame: base_link
     world_frame: odom             # world_frame = odom for odom-based localization
 
-    odom0: /odom
+    odom0: /micro_ros_odom_publisher
     odom0_config: [true,  true,  true,   # x, y, z
                    false, false, false,    # roll, pitch, yaw
                    true,  true,  true,   # vx, vy, vz
@@ -22,7 +22,7 @@ ekf_filter_node:
     odom0_relative: false
     #odom0_queue_size: 2
 
-    imu0: /imu
+    imu0: /micro_ros_imu_publisher
     imu0_config: [false, false, false,    # x, y, z
                   true,  true,  true,     # roll, pitch, yaw
                   false, false, false,    # vx, vy, vz
