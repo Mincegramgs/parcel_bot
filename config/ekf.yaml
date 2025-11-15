@@ -1,10 +1,10 @@
 ekf_node:
   ros__parameters:
-
-    frequency: 30.0               # EKF update rate (Hz)
+    frequency: 30.0            # EKF update rate (Hz)
     sensor_timeout: 0.1           # Max time delay before data is ignored
     two_d_mode: true              # We only estimate planar motion (x, y, yaw)
     print_diagnostics: true
+    predict_to_current_time: true
     publish_acceleration: true
     publish_tf: true
     map_frame: map
@@ -13,33 +13,24 @@ ekf_node:
     world_frame: odom             # world_frame = odom for odom-based localization
 
     odom0: /micro_ros_odom_publisher
-    odom0_config: [true,  true,  true,   # x, y, z
+    odom0_config: [true,  true,  false,   # x, y, z
                    false, false, false,    # roll, pitch, yaw
-                   true,  true,  true,   # vx, vy, vz
+                   false,  false,  false,   # vx, vy, vz
                    false, false, true,    # vroll, vpitch, vyaw
                    false, false, false]   # ax, ay, az
     odom0_differential: false
-    odom0_relative: false
-    #odom0_queue_size: 2
+    odom0_queue_size: 10
 
-    imu0: /micro_ros_imu_publisher
+    imu0: /imu/data_filtered
     imu0_config: [false, false, false,    # x, y, z
-                  true,  true,  true,     # roll, pitch, yaw
+                  false,  false,  false,     # roll, pitch, yaw
                   false, false, false,    # vx, vy, vz
                   true, true, true,     # vroll, vpitch, vyaw
                   true,  true,  true]     # ax, ay, az
+    imu0_queue_size: 10
     imu0_differential: false
     imu0_relative: true
-    imu0_remove_gravitational_acceleration: true
 
-    # ----- Process Noise -----
-    process_noise_covariance: [
-      0.05, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.05, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.03, 0.0, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.03, 0.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.05
-    ]
+    use_control: false
+    # imu0_remove_gravitational_acceleration: true
 
-    

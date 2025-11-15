@@ -4,9 +4,9 @@ from ament_index_python.packages import get_package_share_directory
 
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.actions import IncludeLaunchDescription,  DeclareLaunchArgument, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command
+from launch.substitutions import Command, LaunchConfiguration
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessStart
 
@@ -48,6 +48,14 @@ def generate_launch_description():
         'config',
         'ekf.yaml'
     )
+
+    laser_scan_filter = Node(
+        package='laser_scan_filter',
+        executable='laser_filter',
+        name='laser_scan_node',
+        output ='screen',
+        parameters=[{'use_sim_time': False}]
+    )
     
     robot_localization_node = Node(
         package='robot_localization',
@@ -57,9 +65,86 @@ def generate_launch_description():
         parameters=[ekf_config, {'use_sim_time': False}]
     )
 
+    camera_node = Node(
+        package='camera_ros',
+        executable='camera_node',
+        name='camera',
+        output='screen',
+        parameters=[{'use_sim_time': False}]
+    )
 
+    imu_filter_node = Node(
+        package= 'imu_filter',
+        executable='imu_filter',
+        name='imu_node',
+        output ='screen',
+        parameters=[{'use_sim_time': False}]
+
+    )
+
+    
     robot_description = Command(['ros2 param get --hide-type /robot_state_publisher robot_description'])
 
+    channel_type = LaunchConfiguration('channel_type', default='serial')
+    serial_port = LaunchConfiguration('serial_port', default='/dev/ttyUSB0')
+    serial_baudrate = LaunchConfiguration('serial_baudrate', default='115200')
+    frame_id = LaunchConfiguration('frame_id', default='laser')
+    inverted = LaunchConfiguration('inverted', default='false')
+    angle_compensate = LaunchConfiguration('angle_compensate', default='true')
+    scan_mode = LaunchConfiguration('scan_mode', default='Sensitivity')
+
+    lidar_node = Node(
+        package='sllidar_ros2',
+        executable='sllidar_node',
+        name='sllidar_node',
+        output='screen',
+        parameters=[{
+            'channel_type': channel_type,
+            'serial_port': serial_port,
+            'serial_baudrate': serial_baudrate,
+            'frame_id': frame_id,
+            'inverted': inverted,
+            'angle_compensate': angle_compensate,
+            'scan_mode': scan_mode
+        }]
+    )
+    rviz_config_path = os.path.join(
+        get_package_share_directory('sllidar_ros2'),
+        'rviz',
+        'sllidar_ros2.rviz'
+    )
+
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config_path],
+        output='screen'
+    )
+
+    # === 6. Add Delays (TimerAction) ===
+    # Delay LiDAR startup by 5 seconds
+    delayed_lidar = TimerAction(
+        period=5.0,
+        actions=[lidar_node]
+    )
+
+    # Delay RViz startup by 8 seconds (after TF, LiDAR, and robot model are ready)
+    delayed_rviz = TimerAction(
+        period=8.0,
+        actions=[rviz_node]
+    )
+
+    # === 7. Declare Arguments ===
+    declare_args = [
+        DeclareLaunchArgument('channel_type', default_value='serial'),
+        DeclareLaunchArgument('serial_port', default_value='/dev/ttyUSB0'),
+        DeclareLaunchArgument('serial_baudrate', default_value='115200'),
+        DeclareLaunchArgument('frame_id', default_value='laser'),
+        DeclareLaunchArgument('inverted', default_value='false'),
+        DeclareLaunchArgument('angle_compensate', default_value='true'),
+        DeclareLaunchArgument('scan_mode', default_value='Sensitivity'),
+    ]
     # controller_params_file = os.path.join(get_package_share_directory(package_name),'config','my_controllers.yaml')
 
     # controller_manager = Node(
@@ -118,8 +203,14 @@ def generate_launch_description():
 
     # Launch them all!
     return LaunchDescription([
+        *declare_args,
         rsp,
-        robot_localization_node
+        robot_localization_node,
+        # camera_node,
+        imu_filter_node,
+        delayed_lidar,
+        laser_scan_filter
+        # delayed_rviz
         # joystick,
         # twist_mux,
         # delayed_controller_manager,
